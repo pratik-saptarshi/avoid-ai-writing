@@ -4,7 +4,7 @@ description: Audit content for AI writing patterns ("AI-isms") and report the fi
 version: 3.39.0
 license: MIT
 fork_of: "conorbronsdon/avoid-ai-writing"
-fork_version: 1
+fork_version: 2
 compatibility: Any AI coding assistant that supports agentskills.io SKILL.md format (Claude Code, Cursor, VS Code Copilot, Hermes Agent, OpenHands, etc.) or OpenClaw. No external tools or APIs required.
 metadata:
   author: Conor Bronsdon

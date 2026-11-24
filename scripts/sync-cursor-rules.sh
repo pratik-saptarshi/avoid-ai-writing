@@ -105,7 +105,7 @@ body = replace_once(
 )
 
 cursor_fm = f"""---
-description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Activate whenever editing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails). Cursor port of the avoid-ai-writing skill v{version}. See https://github.com/conorbronsdon/avoid-ai-writing.
+description: Audit content for AI writing patterns ("AI-isms") and report the findings — detect-only in this fork; it never rewrites or edits text. Activate when auditing prose-heavy files (Markdown, documentation, blog posts, READMEs, release notes, emails) for AI tells. Cursor port of the avoid-ai-writing skill v{version}. See https://github.com/conorbronsdon/avoid-ai-writing.
 globs: ["**/*.md", "**/*.mdx", "**/*.txt", "**/*.rst", "**/*.adoc"]
 alwaysApply: false
 ---
