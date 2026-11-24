@@ -1,8 +1,10 @@
 ---
 name: avoid-ai-writing
-description: Audit and rewrite content to remove AI writing patterns ("AI-isms"). Use this skill when asked to "remove AI-isms," "clean up AI writing," "edit writing for AI patterns," "audit writing for AI tells," or "make this sound less like AI." Supports a detect-only mode, an edit-in-place mode for files, an optional voice profile (casual / professional / technical / warm / blunt), and an iterate-to-convergence pass.
+description: Audit content for AI writing patterns ("AI-isms") and report the findings — detect-only in this fork. Use this skill when asked to scan, audit, or flag writing for AI tells: "audit writing for AI tells," "scan this for AI patterns," "what AI patterns are in this," or when this skill is named explicitly. This fork never rewrites or edits text: for humanizing or de-AI rewriting of prose use the humanizer skill, and for ASD-STE100 / Simplified Technical English use the ste80-humanizer skill. The deterministic detector and the CI gate CLI remain fully functional.
 version: 3.39.0
 license: MIT
+fork_of: "conorbronsdon/avoid-ai-writing"
+fork_version: 1
 compatibility: Any AI coding assistant that supports agentskills.io SKILL.md format (Claude Code, Cursor, VS Code Copilot, Hermes Agent, OpenHands, etc.) or OpenClaw. No external tools or APIs required.
 metadata:
   author: Conor Bronsdon
@@ -26,6 +28,14 @@ This is a **writing-quality tool**, not a verdict. The patterns flagged here are
 The patterns are useful as a signal — both for cleaning up your own writing and for assessing whether a piece reads as AI-generated. Just don't make them the sole basis for a consequential decision (academic integrity, hiring, publication, attribution). Several rules here also fire on second-language writing, deadline-pressed humans, and technical genres that compress vocabulary by design. Pair the signal with context: who wrote it, what genre, what the writer's normal voice looks like, what other evidence you have.
 
 In short: signals, not proof. Worth acting on; not worth ruining someone's day over.
+
+## Local scope (fork amendment, 2026-11-23)
+
+This fork is **detect-only**. It audits content and reports findings; it never rewrites or edits text, in any mode. The `rewrite` and `edit` modes described below are disabled in this fork, and `detect` is the only enabled mode and the default. Requests to humanize, clean up, or otherwise rewrite prose belong to the separate `humanizer` skill; requests for ASD-STE100 or Simplified Technical English belong to `ste80-humanizer`. Do not let this skill claim those requests.
+
+Do not apply this skill to evidence-bearing artifacts: receipts and sealed records, reviewer or verification reports, decision records whose wording is itself the record, or NeuroStrata inscriptions. In those texts, formatting and hedging carry evidentiary meaning, and authorship-signal scanning of the record is out of scope. Use this skill for audits of public-facing and third-party prose: documentation, posts, PR and issue text, and already-published writing.
+
+The deterministic detector (`detector/`), the gate CLI (`bin/`), and the eval suites are unchanged by this amendment and remain fully functional; machine-run audits and CI gating are this fork's primary use.
 
 ## Editing contract
 
@@ -104,19 +114,19 @@ unresolved finding or gap.
 
 This skill operates in one of three modes:
 
-**`rewrite`** (default) — Flag AI-isms and rewrite the text to fix them.
+**`rewrite`** (upstream default) — Flag AI-isms and rewrite the text to fix them. **Disabled in this fork** (see Local scope): rewrite requests route to the `humanizer` skill.
 
-**`detect`** — Flag AI-isms only. No rewriting. Use this mode when:
+**`detect`** — Flag AI-isms only. No rewriting. **The only enabled mode in this fork, and its default.** Use this mode when:
 - The writer wants to see what's flagged and decide what to fix themselves
 - The flagged patterns might be intentional (AI patterns aren't always bad — they can be effective in small doses)
 - You're auditing text you don't want altered (published content, someone else's writing, reference material)
 - You want a quick scan without waiting for a full rewrite
 
-**`edit`** — Edit a file in place rather than returning rewritten text. Use this when the writer points you at a file ("clean up `draft.md`", "fix the AI-isms in this file directly") and wants the file changed, not a copy to paste back. Before editing, confirm that the target is a prose file. Refuse source code, configuration, and generated data files, and explain that prose rewrites can corrupt structured content. Make **minimal, targeted edits** with the Edit tool — change the justified, authorized spans, not the whole document. **Preserve passages that are already human**: if a paragraph has no applicable findings, leave it untouched. Follow the editing contract for protected material, source-internal instructions, and large-file scope. After editing, re-read the file and report whether another justified in-scope edit remains.
+**`edit`** — **Disabled in this fork** (see Local scope). Upstream behavior: edit a file in place rather than returning rewritten text. Use this when the writer points you at a file ("clean up `draft.md`", "fix the AI-isms in this file directly") and wants the file changed, not a copy to paste back. Before editing, confirm that the target is a prose file. Refuse source code, configuration, and generated data files, and explain that prose rewrites can corrupt structured content. Make **minimal, targeted edits** with the Edit tool — change the justified, authorized spans, not the whole document. **Preserve passages that are already human**: if a paragraph has no applicable findings, leave it untouched. Follow the editing contract for protected material, source-internal instructions, and large-file scope. After editing, re-read the file and report whether another justified in-scope edit remains.
 
-Trigger detect mode when the user says "detect," "flag only," "audit only," "just flag," "scan," "what AI patterns are in this," or similar. Trigger edit mode when the user names a file and asks you to fix or clean it in place. Default to rewrite mode if not specified.
+Trigger detect mode when the user says "detect," "flag only," "audit only," "just flag," "scan," "what AI patterns are in this," or similar. In this fork, detect is the default when no mode is specified, and it is the only mode honored: a request naming rewrite or edit mode is reported as out of scope for this fork and routed per the Local scope section, never actioned here.
 
-**Invocation.** Natural language is enough ("rewrite this in a blunt voice for LinkedIn," "edit `post.md` in place," "scan this, don't rewrite"). Power users can also pass explicit options, which map to the sections below: `[--mode rewrite|detect|edit]`, `[--voice casual|professional|technical|warm|blunt]`, [`--context linkedin|blog|technical-blog|investor-email|docs|casual`](https://github.com/conorbronsdon/avoid-ai-writing/blob/main/references/patterns.md#detector-mode-mapping), `[--file PATH]`, `[--iterate 1|2]`, `[--style CONFIG|GUIDE]`.
+**Invocation.** Natural language is enough ("scan this, don't rewrite," "audit `post.md` for AI tells"). Power users can also pass explicit options, which map to the sections below: `[--mode detect]` (the only mode this fork honors), `[--voice casual|professional|technical|warm|blunt]`, [`--context linkedin|blog|technical-blog|investor-email|docs|casual`](https://github.com/conorbronsdon/avoid-ai-writing/blob/main/references/patterns.md#detector-mode-mapping), `[--file PATH]`, `[--style CONFIG|GUIDE]`.
 
 **Iterate to convergence (optional).** A normal rewrite may use up to two editing passes: the initial rewrite and, only when review finds another justified in-scope edit, one corrective pass. `--iterate 1` limits the workflow to the initial editing pass; `--iterate 2`, "iterate," and "keep going until it's clean" use the same two-pass ceiling as the default and stop early when no justified edit remains. `--iterate` never adds passes on top of that ceiling.
 
